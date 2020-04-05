@@ -15,6 +15,7 @@ module.exports = (api, options) => {
     devDependencies,
     scripts: {
       'test:e2e': 'vue-cli-service test:e2e',
+      'test:e2e:multiple': 'vue-cli-service test:e2e:multiple',
       'test:e2e:parallel': 'vue-cli-service test:e2e:parallel',
       'test:e2e:open': 'vue-cli-service test:e2e:open',
     },
