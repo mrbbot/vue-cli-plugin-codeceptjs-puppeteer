@@ -174,7 +174,10 @@ module.exports = (api, options) => {
 }
 
 module.exports.defaultModes = {
-  'test:e2e': 'production'
+  'test:e2e': 'production',
+  'test:e2e:open': 'production',
+  'test:e2e:multiple': 'production',
+  'test:e2e:parallel': 'production',
 }
 
 function removeArg (rawArgs, argToRemove, offset = 1) {
