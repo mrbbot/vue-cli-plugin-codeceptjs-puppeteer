@@ -17,6 +17,7 @@ module.exports = (api, options) => {
       'test:e2e': 'vue-cli-service test:e2e',
       'test:e2e:multiple': 'vue-cli-service test:e2e:multiple',
       'test:e2e:parallel': 'vue-cli-service test:e2e:parallel',
+      'test:e2e:run-rerun': 'vue-cli-service test:e2e:run-rerun',
       'test:e2e:open': 'vue-cli-service test:e2e:open',
     },
   });

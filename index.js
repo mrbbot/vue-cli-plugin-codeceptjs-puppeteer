@@ -131,6 +131,43 @@ module.exports = (api, options) => {
 
     return runner;
   });
+
+  api.registerCommand('test:e2e:run-rerun', {
+    description: 'run e2e tests multiple times to detect and fix flaky tests with CodeceptJS',
+    usage: 'vue-cli-service test:e2e:run-rerun [options]',
+    options: {
+      '-s, --serve': 'run dev server before a test',
+      '--mode': 'specify the mode the dev server should run in. (default: production)',
+    },
+    details:
+      `All CodeceptJS CLI options are also supported:\n` +
+      chalk.yellow(`https://codecept.io/commands#run`)
+  }, async (args, rawArgs) => {
+    removeArg(rawArgs, 'serve');
+    removeArg(rawArgs, 'mode');
+    rawArgs.unshift('run-rerun')
+
+    info(`Starting e2e tests...`);
+
+    const server = await runServer(args.serve);   
+
+    const codeceptBin = require.resolve('codeceptjs/bin/codecept');
+
+    // run tests in headless mode
+    const runner = execa(codeceptBin, rawArgs, { stdio: 'inherit', env: { HEADLESS: true } })
+    if (server) {
+      runner.on('exit', () => server.close());
+      runner.on('error', () => server.close());
+    }
+
+    if (process.env.VUE_CLI_TEST) {
+      runner.on('exit', code => {
+        process.exit(code)
+      })
+    }
+
+    return runner;
+  });
   
   api.registerCommand('test:e2e:open', {
     description: 'run UI for CodeceptJS',
@@ -178,6 +215,7 @@ module.exports.defaultModes = {
   'test:e2e:open': 'production',
   'test:e2e:multiple': 'production',
   'test:e2e:parallel': 'production',
+  'test:e2e:run-rerun': 'production',
 }
 
 function removeArg (rawArgs, argToRemove, offset = 1) {
