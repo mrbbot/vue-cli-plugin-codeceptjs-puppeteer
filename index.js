@@ -5,7 +5,6 @@ module.exports = (api, options) => {
     description: 'run e2e tests with CodeceptJS',
     usage: 'vue-cli-service test:e2e [options]',
     options: {
-      '--headless': 'run in headless mode',
       '-s, --serve': 'run dev server before a test',
       '--mode': 'specify the mode the dev server should run in. (default: production)',
     },
@@ -13,45 +12,30 @@ module.exports = (api, options) => {
       `All CodeceptJS CLI options are also supported:\n` +
       chalk.yellow(`https://codecept.io/commands#run`)
   }, async (args, rawArgs) => {
-    removeArg(rawArgs, 'headless');
     removeArg(rawArgs, 'serve');
     removeArg(rawArgs, 'mode');
+    rawArgs.unshift('run')
 
     info(`Starting e2e tests...`);
-    if (args.headless) info('Headless mode enabled');
 
-    const server = await runServer(args.serve);   
-    
-    const { container, config, codecept } = require('codeceptjs');
-    const { setHeadlessWhen } = require('@codeceptjs/configure');
-      
-    const opts = { steps: true };
-    
-    setHeadlessWhen(args.headless);
-    config.load(args.config || api.getCwd());
+    const server = await runServer(args.serve);
 
-    const conf = config.get();
-    
+    const codeceptBin = require.resolve('codeceptjs/bin/codecept');
 
-    if (server) conf.teardown = () => server.close();
+    // run tests in headless mode
+    const runner = execa(codeceptBin, rawArgs, { stdio: 'inherit', env: { HEADLESS: true } })
+    if (server) {
+      runner.on('exit', () => server.close());
+      runner.on('error', () => server.close());
+    }
 
-    // create runner
-    let runner = new codecept(conf, { ...opts, ...args });
-    
-    // initialize codeceptjs in tests/e2e
-    runner.initGlobals(api.getCwd());
-    
-    // create helpers, support files, mocha
-    container.create(conf, opts);
-    
-    // initialize listeners
-    runner.runHooks();
-    
-    // load tests
-    runner.loadTests();
-    
-    // run tests
-    return runner.run();      
+    if (process.env.VUE_CLI_TEST) {
+      runner.on('exit', code => {
+        process.exit(code)
+      })
+    }
+
+    return runner;
   });
 
   api.registerCommand('test:e2e:multiple', {
